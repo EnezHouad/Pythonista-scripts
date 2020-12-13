@@ -13,9 +13,9 @@
 # =================================================================
 
 import ui, editor, keyboard
-from objc_util import *from ui3.sfsymbol import *
+from objc_util import *
+from ui3.sfsymbol import *
 from ui3.menu import *
-
 
 @on_main_thread
 def tv_find(tv):
