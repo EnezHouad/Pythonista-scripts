@@ -12,10 +12,10 @@
 # Thanks for all their work for Pythonista's community.
 # =================================================================
 
-import ui
-from objc_util import *
-from ui3.sfsymbol import *
-import editor, keyboard
+import ui, editor, keyboard
+from objc_util import *from ui3.sfsymbol import *
+from ui3.menu import *
+
 
 @on_main_thread
 def tv_find(tv):
@@ -55,7 +55,15 @@ def tv_find(tv):
 		l.border_width = 1
 		tv.addSubview_(l)		
 	
-# ———————————————————————————————————————————————————————————————————
+# -------------------------------------------------------------------
+
+def lineAction(sender, action):
+	tv = sender.objc_instance.firstResponder() # associated TextView 
+	firstWord = action.title.split('\t')[0]
+	strDict = {'Simple':'# '+65*'-', 'Double':'# '+65*'=', 'Dièse':67*'#'}
+	tv.insertText_(strDict[firstWord])
+	
+# -----------------------------------------------------------------
 
 def key_pressed(sender):
 	import clipboard
@@ -87,13 +95,6 @@ def key_pressed(sender):
 	elif sender.name == 'find':
 		tv_find(tv)
 		
-	elif sender.name == 'line-':
-		tv.insertText_('# ' + 65 * '—')
-	elif sender.name == 'line=':
-		tv.insertText_('# ' + 65 * '=')
-	elif sender.name == 'line#':
-		tv.insertText_(67 * '#')
-		
 	else: # all other keys > insert button title
 		tv.insertText_(sender.title)
 	
@@ -112,14 +113,14 @@ class SpecialKeyRow(ui.View):
 		self.buttonsList = []
 		self.buttonWidth = (sw - (2*8) - (24*4)) / 25
 		self.buttonHeight = 40
-		
-		# ———————————————————————————————————————————————————————————————————
+
+		# -------------------------------------------------------------------
 		# MAIN VIEW	
 	
 		self.width, self.height = sw, 50
 		self.alpha = 0.98
 		
-		# ———————————————————————————————————————————————————————————————————
+		# -------------------------------------------------------------------
 		# SCROLL VIEW
 		
 		sv = ui.ScrollView(name='scrollview')
@@ -134,9 +135,9 @@ class SpecialKeyRow(ui.View):
 		
 		self.add_subview(sv)
 		
-		# ———————————————————————————————————————————————————————————————————
+		# -------------------------------------------------------------------
 		# BUTTONS IN SCROLL VIEW
-		# ———————————————————————————————————————————————————————————————————
+		# -------------------------------------------------------------------
 
 		for pad_elem in self.pad:
 			if not 'style' in pad_elem: bStyle = 'light'
@@ -145,7 +146,10 @@ class SpecialKeyRow(ui.View):
 				b = self.add_text_button(name=pad_elem['key'], title=pad_elem['title'], style=bStyle)
 			elif 'symbol' in pad_elem:
 				b = self.add_symbol_button(name=pad_elem['key'], symbol_name=pad_elem['symbol'], style=bStyle)
-			self.add_scrollview_button(b)
+			elif 'menu' in pad_elem:
+				b = self.add_text_button(name=pad_elem['key'], title=pad_elem['menu'], style=bStyle)
+				set_menu(b, pad_elem['options'], long_press=False)
+			self.add_scrollview_button(b)			
 		
 	# ===================================================================
 		 
@@ -161,7 +165,7 @@ class SpecialKeyRow(ui.View):
 		self['scrollview'].add_subview(b)
 		self.buttonsList.append(b)
 			
-	# ———————————————————————————————————————————————————————————————————
+	# -------------------------------------------------------------------
 	
 	def add_text_button(self, name='', title='', width=40, style='light'):
 		b = self.add_button(name, style)
@@ -171,7 +175,7 @@ class SpecialKeyRow(ui.View):
 		else: b.width = self.buttonWidth		
 		return b
 		
-	# ———————————————————————————————————————————————————————————————————
+	# -------------------------------------------------------------------
 	
 	def add_symbol_button(self, name='', symbol_name='', style='light'):
 		b = self.add_button(name, style)
@@ -180,7 +184,7 @@ class SpecialKeyRow(ui.View):
 		b.width = self.buttonWidth	
 		return b
 		
-	# ———————————————————————————————————————————————————————————————————
+	# -------------------------------------------------------------------
 	
 	def add_button(self, name='', backgroundStyle='light'):		
 		b = ui.Button(name=name)
@@ -197,6 +201,8 @@ class SpecialKeyRow(ui.View):
 		b.height = self.buttonHeight		
 		return b
 		
+# ===================================================================
+		
 @on_main_thread
 def display_keyboard():
 	# @cvp
@@ -209,7 +215,7 @@ def display_keyboard():
 # ===================================================================
 
 @on_main_thread
-def AddButtonsToPythonistaKeyboard(pad=None):
+def add_buttons_to_Pythonista_keyboard(pad=None):
 	
 	def numeric_keys(): 
 		list = []
@@ -218,8 +224,8 @@ def AddButtonsToPythonistaKeyboard(pad=None):
 		list.append({'key':'0', 'title':'0'})
 		return list
 		
-	if not pad:		
-		pad = [
+	if not pad:	
+		padPage1 = [
 				{'key':'tab', 'symbol':'arrow.right.to.line.alt'},				
 			
 				{'key':'undo', 'symbol':'arrow.uturn.left', 'style':'dark'},
@@ -253,13 +259,20 @@ def AddButtonsToPythonistaKeyboard(pad=None):
 				{'key':':', 'title':':'},
 			
 				{'key':'del_right', 'symbol':'delete.right', 'style':'dark'},
-			
-				{'key':'find', 'symbol':'magnifyingglass', 'style':'dark'}
+				
+				{'key':'tab', 'symbol':'arrow.right.to.line.alt'}
+				]		
+
+		padPage2 = [	
+				{'key':'undo', 'symbol':'arrow.uturn.left', 'style':'dark'},
+				{'key':'redo','symbol':'arrow.uturn.right', 'style':'dark'},				
+				{'key':'paste', 'symbol':'doc.on.clipboard'},
+				{'key':'#', 'title':'#'},				
 				]
 				
-		pad += numeric_keys() 
+		padPage2 += numeric_keys() 
 		
-		pad += [
+		padPage2 += [
 				{'key':'+', 'title':'+'},
 				{'key':'-', 'title':'-'},
 				{'key':'*', 'title':'*'},
@@ -267,11 +280,16 @@ def AddButtonsToPythonistaKeyboard(pad=None):
 				{'key':'<', 'title':'<'},
 				{'key':'>', 'title':'>'},
 				{'key':'=', 'title':'='},
+				
+				{'key':'lines', 'menu':'---', 'options':[('Simple\t\t————————', lineAction),
+				('Double\t\t============', lineAction),
+				('Dièse\t\t############', lineAction)]},
 			
-				{'key':'line-', 'title':'--'},
-				{'key':'line=', 'title':'=='},
-				{'key':'line#', 'title':'##'}
-				]	
+				{'key':'find', 'symbol':'magnifyingglass', 'style':'dark'},
+				{'key':'del_right', 'symbol':'delete.right', 'style':'dark'}			
+				]			
+				
+		pad = padPage1 + padPage2
 
 	editorTab = editor._get_editor_tab()
 	
@@ -294,4 +312,4 @@ def AddButtonsToPythonistaKeyboard(pad=None):
 # ===================================================================
 	
 #if __name__ == '__main__':
-AddButtonsToPythonistaKeyboard()
+add_buttons_to_Pythonista_keyboard()
