@@ -85,11 +85,12 @@ def key_pressed(sender):
 		tv.undoManager().redo()
 	
 	elif sender.name == 'del_right':
-		# delete at right = delete at left of next
+		# delete at right = delete at left of next or selection
 		if cursor == (len(str(tv.text()))-1): # already after last character
 			return
-		cursor_position = tv.positionFromPosition_offset_(tv.beginningOfDocument(), cursor+1)
-		tv.selectedTextRange = tv.textRangeFromPosition_toPosition_(cursor_position, cursor_position)
+		if tv.selectedTextRange().length() == 0:
+			cursor_position = tv.positionFromPosition_offset_(tv.beginningOfDocument(), cursor+1)
+			tv.selectedTextRange = tv.textRangeFromPosition_toPosition_(cursor_position, cursor_position)
 		tv.deleteBackward()		
 		
 	elif sender.name == 'find':
