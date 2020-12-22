@@ -63,12 +63,10 @@ def create_keyboard_button(action,index=0):
 	btn = ui.Button()
 	w = ui.get_window_size()[0]
 	btn.frame = (w-(5*48), 24, 40, 40)
-	#btn.frame = (110, 24, 40, 40)
 	
-	if ui.get_ui_style() == 'dark':
-		btn.tint_color = 'white' 
-	else:
-		btn.tint_color = '#0D89B5' 
+	tintColor = tb.tintColor().hexStringFromColor()
+	btn.tint_color = "#" + str(tintColor)
+
 	btn.image = SymbolImage('keyboard', point_size=14, weight=THIN, scale=SMALL)
 	btn.image = btn.image.with_rendering_mode(ui.RENDERING_MODE_AUTOMATIC)
 			
